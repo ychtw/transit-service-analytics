@@ -1,0 +1,10 @@
+# environment
+.env
+.vscode/
+
+# data and cache
+data/
+__pycache__/
+
+# testing bash file
+run.sh

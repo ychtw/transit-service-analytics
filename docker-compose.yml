@@ -1,0 +1,37 @@
+services:
+  airflow:
+    image: apache/airflow:2.8.1-python3.10
+    container_name: airflow
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      PYTHONPATH: /opt/airflow/src
+    env_file:
+      - .env
+    volumes:
+      - ./scripts:/scripts
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./data:/opt/airflow/data
+      - ./requirements.txt:/requirements.txt
+    ports:
+      - "8080:8080"
+    command: bash /scripts/start_airflow.sh
+    networks:
+      - transit-net
+
+  python-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: python_dev
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    networks:
+      - transit-net
+
+networks:
+  transit-net:
