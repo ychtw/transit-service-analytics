@@ -4,11 +4,14 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from dotenv import load_dotenv
 
 from ingestion.fetch_static_gtfs import fetch_static_gtfs
+from utils.config import get_config
 
-load_dotenv()
+# get configs
+cfg = get_config()
+url = cfg["api"]["static_url"]
+output_path = cfg["paths"]["raw"]["static_gtfs"]
 
 default_args = {
     "owner": "airflow",
@@ -34,7 +37,7 @@ with DAG(
         python_callable=fetch_static_gtfs,
         op_kwargs={
             "agency": "mbta",
-            "url": "https://cdn.mbta.com/MBTA_GTFS.zip",
-            "output_path": "data/raw/static_gtfs",
+            "url": url,
+            "output_path": output_path,
         },
     )

@@ -1,0 +1,10 @@
+env: local
+
+paths:
+  raw:
+    static_gtfs: "data/raw/static_gtfs/"
+    realtime_gtfs: "data/raw/realtime_gtfs/"
+
+api:
+  static_url: "https://cdn.mbta.com/MBTA_GTFS.zip"
+  realtime_url: "https://cdn.mbta.com/realtime/TripUpdates.pb"

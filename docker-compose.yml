@@ -14,6 +14,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
+      - ./config:/opt/airflow/config
       - ./requirements.txt:/requirements.txt
     ports:
       - "8080:8080"

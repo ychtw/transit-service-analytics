@@ -9,9 +9,13 @@ from airflow.operators.python import PythonOperator
 from dotenv import load_dotenv
 
 from ingestion.fetch_realtime_gtfs import fetch_realtime_gtfs
+from utils.config import get_config
 
+# get config and environment variables
 load_dotenv()
-
+cfg = get_config()
+url = cfg["api"]["realtime_url"]
+output_path = cfg["paths"]["raw"]["realtime_gtfs"]
 
 # TODO: limit num of runs for testing purpose, might remove later
 def stop_after_n_runs(max_runs=3, **context):
@@ -53,9 +57,9 @@ with DAG(
         python_callable=fetch_realtime_gtfs,
         op_kwargs={
             "agency": "mbta",
-            "url": "https://cdn.mbta.com/realtime/TripUpdates.pb",
+            "url": url,
             "api_key": os.getenv("MBTA_API_KEY"),
-            "output_path": "data/raw/realtime_gtfs",
+            "output_path": output_path,
         },
     )
 
