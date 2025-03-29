@@ -10,13 +10,6 @@ from ingestion.ingest_static_gtfs import ingest_static_gtfs
 from utils.config import get_config
 from utils.sql_utils import drop_static_gtfs_tables, execute_sql_query
 
-# get configs
-cfg = get_config()
-sql_path = cfg["paths"]["sql"]["static_gtfs_schema"]
-db_path = cfg["paths"]["staging"]["gtfs_db"]
-static_gtfs_dir = Path(cfg["paths"]["raw"]["static_gtfs"])
-
-
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -27,7 +20,7 @@ default_args = {
 }
 
 
-def run_ingest_static_gtfs(sql_path, db_path, static_gtfs_dir):
+def run_ingest_static_gtfs(**kwargs):
     """
     Ingest static GTFS data into a DuckDB database.
 
@@ -45,6 +38,12 @@ def run_ingest_static_gtfs(sql_path, db_path, static_gtfs_dir):
     Raises:
         duckdb.IOException: If the database connection fails or schema execution fails.
     """
+    # get configs
+    cfg = get_config()
+    sql_path = cfg["paths"]["sql"]["static_gtfs_schema"]
+    db_path = cfg["paths"]["staging"]["gtfs_db"]
+    static_gtfs_dir = Path(cfg["paths"]["raw"]["static_gtfs"])
+
     print("Connect to DuckDB")
     conn = duckdb.connect(db_path)
 
@@ -86,11 +85,6 @@ with DAG(
     ingest_task = PythonOperator(
         task_id="ingest_static_gtfs_to_duckdb",
         python_callable=run_ingest_static_gtfs,
-        op_kwargs={
-            "sql_path": sql_path,
-            "db_path": db_path,
-            "static_gtfs_dir": static_gtfs_dir,
-        },
     )
 
     wait_for_fetch >> ingest_task

@@ -8,10 +8,26 @@ from airflow.operators.python import PythonOperator
 from ingestion.fetch_static_gtfs import fetch_static_gtfs
 from utils.config import get_config
 
-# get configs
-cfg = get_config()
-url = cfg["api"]["static_url"]
-output_path = cfg["paths"]["raw"]["static_gtfs"]
+
+def fetch_static_wrapper(**kwargs):
+    """
+    Load environment and config at runtime, then call fetch_static_gtfs.
+    """
+
+    # get configs
+    cfg = get_config()
+    url = cfg["api"]["static_url"]
+    output_path = cfg["paths"]["raw"]["static_gtfs"]
+
+    print(f"static url: {url}")
+    print(f"output_path: {output_path}")
+
+    return fetch_static_gtfs(
+        agency="mbta",
+        url=url,
+        output_path=output_path,
+    )
+
 
 default_args = {
     "owner": "airflow",
@@ -34,10 +50,5 @@ with DAG(
 
     fetch_task = PythonOperator(
         task_id="fetch_static_gtfs_data",
-        python_callable=fetch_static_gtfs,
-        op_kwargs={
-            "agency": "mbta",
-            "url": url,
-            "output_path": output_path,
-        },
+        python_callable=fetch_static_wrapper,
     )

@@ -11,11 +11,6 @@ from dotenv import load_dotenv
 from ingestion.fetch_realtime_gtfs import fetch_realtime_gtfs
 from utils.config import get_config
 
-# get config and environment variables
-load_dotenv()
-cfg = get_config()
-url = cfg["api"]["realtime_url"]
-output_path = cfg["paths"]["raw"]["realtime_gtfs"]
 
 # TODO: limit num of runs for testing purpose, might remove later
 def stop_after_n_runs(max_runs=3, **context):
@@ -24,6 +19,26 @@ def stop_after_n_runs(max_runs=3, **context):
     if len(dag_runs) >= max_runs:
         subprocess.run(["airflow", "dags", "pause", dag_id], check=True)
         raise Exception(f"Reached maximum runs ({max_runs}), pause DAG '{dag_id}'")
+
+
+def fetch_realtime_wrapper(**kwargs):
+    """
+    Load environment and config at runtime, then call fetch_realtime_gtfs.
+    """
+
+    load_dotenv()
+    api_key = os.getenv("MBTA_API_KEY")
+
+    cfg = get_config()
+    url = cfg["api"]["realtime_url"]
+    output_path = cfg["paths"]["raw"]["realtime_gtfs"]
+
+    return fetch_realtime_gtfs(
+        agency="mbta",
+        url=url,
+        api_key=api_key,
+        output_path=output_path,
+    )
 
 
 default_args = {
@@ -54,13 +69,7 @@ with DAG(
 
     fetch_task = PythonOperator(
         task_id="fetch_realtime_gtfs_data",
-        python_callable=fetch_realtime_gtfs,
-        op_kwargs={
-            "agency": "mbta",
-            "url": url,
-            "api_key": os.getenv("MBTA_API_KEY"),
-            "output_path": output_path,
-        },
+        python_callable=fetch_realtime_wrapper,
     )
 
     check_limit >> fetch_task
