@@ -14,11 +14,11 @@ def fetch_realtime_gtfs(
     """
     Downloads the real-time GTFS data
 
-    Parameters:
-    - agency: GTFS feed agency name (e.g. mta, mbta, ...)
-    - url: URL of the dataset
-    - api_key: user api key of the real-time gtfs service
-    - output_path: local output directory
+    Args:
+        agency: GTFS feed agency name (e.g. mta, mbta, ...)
+        url: URL of the dataset
+        api_key: user api key of the real-time gtfs service
+        output_path: local output directory
     """
     # validate function inputs
     if not url:

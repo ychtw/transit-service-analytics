@@ -10,10 +10,10 @@ def fetch_static_gtfs(
     """
     Downloads the static GTFS data
 
-    Parameters:
-    - agency: GTFS feed agency name (e.g. mta, mbta, ...)
-    - url: URL of the dataset
-    - output_path: local output directory
+    Args:
+        agency: GTFS feed agency name (e.g. mta, mbta, ...)
+        url: URL of the dataset
+        output_path: local output directory
     """
     # validate function inputs
     if not url:
