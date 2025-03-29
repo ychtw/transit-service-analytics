@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 
 from src.ingestion.fetch_realtime_gtfs import fetch_realtime_gtfs

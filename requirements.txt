@@ -4,3 +4,4 @@ requests
 # logging
 pandas
 gtfs-realtime-bindings
+duckdb

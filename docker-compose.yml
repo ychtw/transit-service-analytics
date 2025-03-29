@@ -21,7 +21,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT: 360
+      AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT: 1200
       PYTHONPATH: /opt/airflow/src
     env_file:
       - .env
@@ -29,6 +29,7 @@ services:
       - ./scripts:/scripts
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
+      - ./sql:/opt/airflow/sql
       - ./data:/opt/airflow/data
       - ./config:/opt/airflow/config
       - ./requirements.txt:/requirements.txt

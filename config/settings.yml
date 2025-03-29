@@ -4,6 +4,10 @@ paths:
   raw:
     static_gtfs: "data/raw/static_gtfs/"
     realtime_gtfs: "data/raw/realtime_gtfs/"
+  staging:
+    gtfs_db: "data/staging/gtfs_staging.duckdb"
+  sql:
+    static_gtfs_schema: "sql/schema/static_gtfs_schema.sql"
 
 api:
   static_url: "https://cdn.mbta.com/MBTA_GTFS.zip"
