@@ -71,6 +71,6 @@ with DAG(
 ) as dag:
 
     ingest_task = PythonOperator(
-        task_id="ingest_static_gtfs_to_duckdb",
+        task_id="ingest_static_gtfs_data",
         python_callable=run_ingest_static_gtfs,
     )

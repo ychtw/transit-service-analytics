@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 
 import requests
-from google.transit import gtfs_realtime_pb2
 
 
 def fetch_realtime_gtfs(
@@ -10,15 +9,23 @@ def fetch_realtime_gtfs(
     url: str = None,
     api_key: str = None,
     output_path: str = None,
-) -> None:
+) -> str:
     """
-    Downloads the real-time GTFS data
+    Fetch and store real-time GTFS data from a given URL.
 
     Args:
-        agency: GTFS feed agency name (e.g. mta, mbta, ...)
-        url: URL of the dataset
-        api_key: user api key of the real-time gtfs service
-        output_path: local output directory
+        agency (str): Name of the transit agency (used for filename prefix).
+        url (str): Full URL to the GTFS real-time .pb feed.
+        api_key (str, optional): API key required for accessing the feed (if applicable).
+        output_path (str): Directory where the downloaded file will be stored.
+
+    Returns:
+        str: Full path to the saved `.pb` file if successful.
+             Returns `None` if saving the file fails.
+
+    Raises:
+        ValueError: If required parameters `url` or `output_path` are not provided.
+        Exception: If the request fails with a non-200 HTTP status.
     """
     # validate function inputs
     if not url:
@@ -48,5 +55,7 @@ def fetch_realtime_gtfs(
     # validate result
     if os.path.exists(file_path):
         print(f"File saved: {file_path}")
+        return file_path
     else:
         print("File write failed")
+        return None

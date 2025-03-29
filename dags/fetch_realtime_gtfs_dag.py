@@ -1,11 +1,11 @@
 import os
-import sys
+import subprocess
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.exceptions import AirflowSkipException
 from airflow.models import DagRun
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from dotenv import load_dotenv
 
 from ingestion.fetch_realtime_gtfs import fetch_realtime_gtfs
@@ -25,7 +25,6 @@ def fetch_realtime_wrapper(**kwargs):
     """
     Load environment and config at runtime, then call fetch_realtime_gtfs.
     """
-
     load_dotenv()
     api_key = os.getenv("MBTA_API_KEY")
 
@@ -33,12 +32,31 @@ def fetch_realtime_wrapper(**kwargs):
     url = cfg["api"]["realtime_url"]
     output_path = cfg["paths"]["raw"]["realtime_gtfs"]
 
-    return fetch_realtime_gtfs(
+    file_path = fetch_realtime_gtfs(
         agency="mbta",
         url=url,
         api_key=api_key,
         output_path=output_path,
     )
+
+    # pass file path as task instance to next dag via xcom (if there's new file saved)
+    if file_path:
+        kwargs["ti"].xcom_push(key="file_path", value=file_path)
+        return file_path
+    else:
+        print("No new file saved — skip ingest trigger")
+        kwargs["ti"].xcom_push(key="file_path", value=None)
+        return None
+
+
+def should_trigger_ingest(**kwargs):
+    """
+    Check if a file_path was returned. If not, skip downstream ingestion.
+    """
+    file_path = kwargs["ti"].xcom_pull(
+        task_ids="fetch_realtime_gtfs_data", key="file_path"
+    )
+    return file_path is not None
 
 
 default_args = {
@@ -72,4 +90,20 @@ with DAG(
         python_callable=fetch_realtime_wrapper,
     )
 
-    check_limit >> fetch_task
+    check_file_exists = ShortCircuitOperator(
+        task_id="check_file_exists",
+        python_callable=should_trigger_ingest,
+    )
+
+    # TODO: consider trigger ingest in larger batches (probably no need to ingest everytime)
+    trigger_ingest = TriggerDagRunOperator(
+        task_id="trigger_ingest_realtime_gtfs",
+        trigger_dag_id="ingest_realtime_gtfs",
+        wait_for_completion=False,
+        reset_dag_run=True,
+        conf={
+            "file_path": "{{ ti.xcom_pull(task_ids='fetch_realtime_gtfs_data', key='file_path') }}"
+        },
+    )
+
+    check_limit >> fetch_task >> check_file_exists >> trigger_ingest
