@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from ingestion.fetch_static_gtfs import fetch_static_gtfs
 from utils.config import get_config
@@ -52,3 +53,12 @@ with DAG(
         task_id="fetch_static_gtfs_data",
         python_callable=fetch_static_wrapper,
     )
+
+    trigger_ingest = TriggerDagRunOperator(
+        task_id="trigger_ingest_static_gtfs",
+        trigger_dag_id="ingest_static_gtfs",
+        wait_for_completion=False,
+        reset_dag_run=True,
+    )
+
+    fetch_task >> trigger_ingest

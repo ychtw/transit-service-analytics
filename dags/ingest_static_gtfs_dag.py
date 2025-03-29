@@ -4,7 +4,6 @@ from pathlib import Path
 import duckdb
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.sensors.external_task import ExternalTaskSensor
 
 from ingestion.ingest_static_gtfs import ingest_static_gtfs
 from utils.config import get_config
@@ -64,27 +63,14 @@ def run_ingest_static_gtfs(**kwargs):
 with DAG(
     dag_id="ingest_static_gtfs",
     default_args=default_args,
-    schedule_interval="@once",
+    schedule_interval=None,  # only run when triggered by fetch_static_gtfs_dag
     catchup=False,
     max_active_runs=1,
     tags=["static-gtfs", "mbta"],
     is_paused_upon_creation=False,
 ) as dag:
 
-    # TODO: replace poke mode
-    wait_for_fetch = ExternalTaskSensor(
-        task_id="wait_for_static_gtfs_fetch",
-        external_dag_id="fetch_static_gtfs",
-        external_task_id="fetch_static_gtfs_data",  # task_id from fetch dag
-        mode="poke",
-        timeout=1200,
-        poke_interval=30,
-        retries=3,
-    )
-
     ingest_task = PythonOperator(
         task_id="ingest_static_gtfs_to_duckdb",
         python_callable=run_ingest_static_gtfs,
     )
-
-    wait_for_fetch >> ingest_task
